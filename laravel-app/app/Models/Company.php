@@ -2,35 +2,34 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class Company extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'phone',
+        'logo',
+        'description',
         'password',
-        'agent_id',
-        'language',
+        'is_approved',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -47,19 +46,20 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_approved' => 'boolean',
         ];
     }
 
     /**
-     * Get the agent that referred this user.
+     * Get the trips offered by this company.
      */
-    public function agent()
+    public function trips()
     {
-        return $this->belongsTo(Agent::class);
+        return $this->hasMany(Trip::class);
     }
 
     /**
-     * Get the bookings for the user.
+     * Get the bookings for this company's trips.
      */
     public function bookings()
     {
@@ -67,10 +67,18 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the reviews written by the user.
+     * Scope to get only approved companies.
      */
-    public function reviews()
+    public function scopeApproved($query)
     {
-        return $this->hasMany(Review::class);
+        return $query->where('is_approved', true);
+    }
+
+    /**
+     * Scope to get pending approval companies.
+     */
+    public function scopePending($query)
+    {
+        return $query->where('is_approved', false);
     }
 }
